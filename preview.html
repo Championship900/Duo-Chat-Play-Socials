@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DuoPlay Preview</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <video id="preview" autoplay muted playsinline style="width:100%; max-width:400px;"></video>
+  <br>
+  <button onclick="toggleCam()">Toggle Camera</button>
+  <button onclick="toggleMic()">Toggle Mic</button>
+  <button onclick="join()">Join Call</button>
+
+  <script>
+    let stream;
+    let cam = true, mic = true;
+    const preview = document.getElementById("preview");
+
+    navigator.mediaDevices.getUserMedia({video:true,audio:true})
+    .then(s => {
+      stream = s;
+      preview.srcObject = stream;
+    })
+    .catch(err => alert("Camera/mic access denied"));
+
+    function toggleCam(){
+      cam = !cam;
+      stream.getVideoTracks()[0].enabled = cam;
+    }
+
+    function toggleMic(){
+      mic = !mic;
+      stream.getAudioTracks()[0].enabled = mic;
+    }
+
+    function join(){
+      location.href = "room.html#private";
+    }
+  </script>
+</body>
+</html>

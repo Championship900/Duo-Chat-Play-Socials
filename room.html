@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DuoPlay Room</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <video id="local" autoplay muted playsinline style="width:45%;"></video>
+  <video id="remote" autoplay playsinline style="width:45%;"></video>
+  <br>
+  <button onclick="leave()">Leave</button>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const room = location.hash.substring(1) || "private-room";
+    const pc = new RTCPeerConnection({iceServers:[{urls:"stun:stun.l.google.com:19302"}]});
+    const local = document.getElementById("local");
+    const remote = document.getElementById("remote");
+
+    navigator.mediaDevices.getUserMedia({video:true,audio:true})
+    .then(stream => {
+      local.srcObject = stream;
+      stream.getTracks().forEach(track => pc.addTrack(track, stream));
+    });
+
+    pc.ontrack = e => remote.srcObject = e.streams[0];
+
+    pc.onicecandidate = e => {
+      if(e.candidate) socket.emit("signal",{candidate:e.candidate});
+    };
+
+    socket.emit("join-room", room);
+
+    socket.on("user-joined", async () => {
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      socket.emit("signal",{sdp:offer});
+    });
+
+    socket.on("signal", async data => {
+      if(data.sdp){
+        await pc.setRemoteDescription(data.sdp);
+        if(data.sdp.type === "offer"){
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          socket.emit("signal",{sdp:answer});
+        }
+      }
+      if(data.candidate){
+        await pc.addIceCandidate(data.candidate);
+      }
+    });
+
+    function leave(){
+      pc.close();
+      location.href="/";
+    }
+  </script>
+</body>
+</html>

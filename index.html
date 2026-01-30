@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DuoPlay</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <h2>DuoPlay</h2>
+  <input id="name" placeholder="Enter your name" />
+  <button onclick="go()">Continue</button>
+
+  <script>
+    function go(){
+      const name = document.getElementById("name").value;
+      if(!name) { alert("Enter your name"); return; }
+      localStorage.setItem("name", name);
+      location.href = "preview.html";
+    }
+  </script>
+</body>
+</html>
